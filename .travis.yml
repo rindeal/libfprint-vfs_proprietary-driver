@@ -1,0 +1,26 @@
+sudo: required
+
+services:
+    - docker
+
+language: minimal
+
+addons:
+    apt:
+        packages:
+            - docker-ce
+
+before_install:
+    - docker run --detach --init --name cont -v $PWD:/repo:rw -w /repo fedora:28 sleep infinity
+
+install:
+    - docker exec cont /repo/.ci/install
+
+before_script:
+    - docker exec cont /repo/.ci/before_script
+
+script:
+    - docker exec cont /repo/.ci/script
+
+notifications:
+    email: false

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -euxv
+
+cd /repo/libfprint
+meson -D drivers=vfs_proprietary -D x11-examples=false -D doc=false build
+ninja -v -C build
+

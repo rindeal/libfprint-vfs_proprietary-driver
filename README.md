@@ -1,5 +1,8 @@
 # libfprint-vfs_proprietary-driver
 
+[![Build Status](https://travis-ci.com/rindeal/libfprint-vfs_proprietary-driver.svg?branch=master)](https://travis-ci.com/rindeal/libfprint-vfs_proprietary-driver)
+
+
 ## What
 
 [libfprint](https://www.freedesktop.org/wiki/Software/fprint/libfprint/) driver for:

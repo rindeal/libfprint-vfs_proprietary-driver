@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -euxv
+
+cd /repo/libfprint
+cp -a /repo/vfs_proprietary libfprint/drivers/vfs_proprietary
+
+sed -e "/^all_drivers *=/a all_drivers += [ 'vfs_proprietary' ]" -i -- meson.build
+sed -e "/^libfprint *=/i libvfsFprintWrapper_dir='/tmp/validity-binaries/usr/lib64/'\nsubdir('drivers/vfs_proprietary')" -i -- libfprint/meson.build
+
+sed -e "s|if imaging_dep.found()|if imaging_dep != [] and imaging_dep.found()|" -i -- libfprint/meson.build
