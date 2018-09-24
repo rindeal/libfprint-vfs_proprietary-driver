@@ -1,0 +1,1 @@
+subdir('vfs_proprietary')
