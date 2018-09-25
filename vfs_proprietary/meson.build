@@ -21,7 +21,7 @@ if drivers.contains('vfs_proprietary')
 
 	drivers_sources += [ files('vfs_proprietary.c', 'capture_helper.c') ]
 	drivers_cflags += [ '-Wno-unused-parameter', '-DVFS_PROPRIETARY_CAPTURE_HELPER_PATH="@0@"'.format(vfs_proprietary_capture_helper_path) ]
-	drivers_cflags += [ '-Wall', '-Wextra' ]
+	# drivers_cflags += [ '-Wall', '-Wextra' ]
 
 else
 
