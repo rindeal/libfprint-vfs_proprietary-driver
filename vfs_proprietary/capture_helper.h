@@ -20,7 +20,7 @@
 
 
 #ifndef VFS_PROPRIETARY_CAPTURE_HELPER_PATH
-# define VFS_PROPRIETARY_CAPTURE_HELPER_PATH "capture-helper"
+#  define VFS_PROPRIETARY_CAPTURE_HELPER_PATH "capture-helper"
 #endif
 
 
