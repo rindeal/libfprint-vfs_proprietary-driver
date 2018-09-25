@@ -24,7 +24,7 @@ This approach proved to be very buggy and worked just for about 50% of time, the
 Not to mention the inherent risks of loading a closed-source proprietary library into the calling process' memory space.
 
 So what I did in this project was to separate the proprietary binaries completely by creating a dedicated process
-which loads the proprieatry library and the just sends back the scanned image via a pipe.
+which loads the proprietary library and then just sends back the scanned image via a pipe.
 This way both binary components (the lib and the daemon) can be sanitized, sandboxed, whatever, ....
 
 I also brought this driver up the spec for the latest libfprint API which was introduced with v0.8.0.
