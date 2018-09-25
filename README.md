@@ -53,6 +53,14 @@ $ sed -e "/^all_drivers *=/a all_drivers += [ 'vfs_proprietary' ]" -i -- meson.b
 $ sed -e "/^libfprint *=/i subdir('drivers/vfs_proprietary')" -i -- libfprint/meson.build
 ```
 
+
+## Assumptions and options
+
 The compilation assumes the shared binary library is installed in `/opt/validity-sensor/usr/lib64`.
 If that's not the case on your installation you can change the path to the containing directory
 by defining `libvfsFprintWrapper_dir` Meson variable prior to calling the `subdir` Meson command.
+
+The driver will return an error if no fingerprint is scanned within a hardcoded time window.
+This timeout can be set with `VFS_PROPRIETARY_CAPTURE_HELPER_TIMEOUT` preprocessor definition.
+
+The filename of the utility used for handling the binary library can be set with `VFS_PROPRIETARY_CAPTURE_HELPER_PATH` cpp macro.
