@@ -2,7 +2,48 @@
 
 set -euxv
 
-cd /repo/libfprint
+repo_dir="/repo"
+
+validity_binaries_dir="/tmp/validity-binaries"
+mkdir -p "${validity_binaries_dir}"
+
+
+## install deps
+yum_deps=(
+	## std build tools
+	meson gcc gcc-c++
+
+	## std build deps
+	glib2-devel libusb1-devel
+
+	## used to download and unpack validity binaries
+	tar rpm cpio wget
+)
+yum -y install "${yum_deps[@]}"
+
+
+## download and unpack validity binaries
+pushd "${validity_binaries_dir}" >/dev/null
+wget https://ftp.hp.com/pub/softpaq/sp84501-85000/sp84530.tar -O - | tar xf -
+rpm2cpio SP*/*.rpm | cpio -idmv
+popd >/dev/null
+
+
+## change directory to libfprint's root dir which was fetched as a submodule of this repository
+cd "${repo_dir}"/libfprint
+
+
+## copy the driver into libfprint's source tree
+cp -a "${repo_dir}"/vfs_proprietary libfprint/drivers/vfs_proprietary
+
+
+## patch the libfprint's meson files
+sed -e "/^all_drivers *=/a all_drivers += [ 'vfs_proprietary' ]" -i -- meson.build
+sed -e "/^libfprint *=/i libvfsFprintWrapper_dir='${validity_binaries_dir}/usr/lib64/'\nsubdir('drivers/vfs_proprietary')" -i -- libfprint/meson.build
+# fix upstream bug
+sed -e "s|if imaging_dep.found()|if imaging_dep != [] and imaging_dep.found()|" -i -- libfprint/meson.build
+
+
+## run the build
 meson -D drivers=vfs_proprietary -D x11-examples=false -D doc=false build
 ninja -v -C build
-
