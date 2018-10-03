@@ -1,6 +1,7 @@
 # libfprint-vfs_proprietary-driver
 
 [![Build Status](https://travis-ci.com/rindeal/libfprint-vfs_proprietary-driver.svg?branch=master)](https://travis-ci.com/rindeal/libfprint-vfs_proprietary-driver)
+![Stability - Beta](https://img.shields.io/badge/stability-beta-33bbff.svg)
 
 
 ## What
@@ -35,12 +36,13 @@ Although there are some reverse-engineering efforts underway for other sensors -
 
 ## How
 
+### Automatic setup
+
 If you use [Portage](https://wiki.gentoo.org/wiki/Portage) you can just install [`sys-auth/libfprint` package from my ebuild repo](https://github.com/rindeal/rindeal-ebuild-repo/tree/master/sys-auth/libfprint)
 with `vfs_proprietary-driver` USE-flag enabled.
 
-If not you have to do everything manually by yourself:
-
-The final architecture should look like this:
+### Manual setup
+How to fit everything together is specific to every Linux distribution, so I cannot describe it step by step, but the final architecture should look like this:
 
 ```plain
                          +--------------------------------+
@@ -115,7 +117,7 @@ The final architecture should look like this:
 
 ## Assumptions and options
 
-The compilation assumes the shared binary library is installed in `/opt/validity-sensor/usr/lib64`.
+The build system assumes the shared binary library is installed in `/opt/validity-sensor/usr/lib64`.
 If that's not the case on your installation you can change the path by defining `libvfsFprintWrapper_dir` Meson variable prior to calling the `subdir(VFS_PROPRIETARY_DIR)` Meson command.
 
 In order to prevent lockups, the driver will return an error if no fingerprint is scanned within a hardcoded time window.
