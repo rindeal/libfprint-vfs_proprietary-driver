@@ -285,7 +285,11 @@
 	)
 
 
-#define TRACE()  fprintf(stderr, "TRACE %s: %s() [%d]\n", _TRACE_STRIPPATH_(__FILE__), __func__, __LINE__)
+#if ! defined( NDEBUG )
+#  define TRACE()  fprintf(stderr, "TRACE %s: %s() [%d]\n", _TRACE_STRIPPATH_(__FILE__), __func__, __LINE__)
+#else
+#  define TRACE()  ((void) 0)
+#endif
 
 
 #endif  // _TRACE_H_
