@@ -40,19 +40,66 @@ with `vfs_proprietary-driver` USE-flag enabled.
 
 If not you have to do everything manually by yourself:
 
-### 1. Install proprietary binaries
+The final architecture should look like this:
 
-They can be downloaded from [here](https://ftp.hp.com/pub/softpaq/sp84501-85000/sp84530.tar).
-
-### 2. Copy this repo to libfprint source tree and patch it's build system
-
-```sh
-$ cd LIBFPRINT_SOURCE_TREE
-$ cp -a THIS_REPO/vfs_proprietary libfprint/drivers/vfs_proprietary
-$ sed -e "/^all_drivers *=/a all_drivers += [ 'vfs_proprietary' ]" -i -- meson.build
-$ sed -e "/^libfprint *=/i subdir('drivers/vfs_proprietary')" -i -- libfprint/meson.build
+```plain
+                                      +----------+
+                                      | some app |
+                                      +----+-----+
+                                           |
+                             +-------------+--------------+
+                             | libfprint                  |
+                             |                            |
+                             | +------------------------+ |
+                             | | vfs_proprietary-driver +-----+
+                             | +------------------------+ |   |
+                             +----------------------------+   |
+                                                              |
+                                                          pipes IPC
+                                                              |
+                          +--------------------------------+  |
+                 +--------+ vfs_proprietary_capture-helper +--+
+                 |        +--------------------------------+
+                 |
+           dynamic linking
+                 |
++---------------------------------------------------------------------------+
+|                |                  proprietary layer                       |
+|                |                                                          |
+| +--------------+-----------------+                +---------------------+ |
+| | libvfsFprintWrapper.so library | <------------> | vcsFPService daemon | |
+| +--------------------------------+   custom IPC   +---------------------+ |
+|                                                                           |
++-------------------------------------------+-------------------------------+
+                                            |
+                                      +-----+------+
+                                      | libusb-0.1 |
+                                      +-----+------+
+                                            |
+                                     +------+-------+
+                                     | Linux kernel |
+                                     +------+-------+
+                                            |
+                                       +----+----+
+                                       | *magic* |
+                                       +----+----+
+                                            |
+                                       +----+----+
+                                       | USB hub |
+                                       +----+----+
+                                            |
+                                  +---------+----------+
+                                  | fingerprint reader |
+                                  +--------------------+
 ```
 
+**Notes:**
+
+ - `vfs_proprietary_capture-helper` is built together with the driver and the driver will have it's installation path hardcoded into itself
+ - `vfs_proprietary_capture-helper` will also have rpath set to the directory containing `libvfsFprintWrapper.so`, so that you can place the proprietary binaries into a separate dir in `/opt` without the necessity to register the path in `/etc/ld.so.conf`.
+ - proprietary binaries can be downloaded from [here](https://ftp.hp.com/pub/softpaq/sp84501-85000/sp84530.tar)
+ - up-to-date script to compile _libfprint_ with this driver enabled is [here](https://github.com/rindeal/libfprint-vfs_proprietary-driver/blob/master/.ci/script)
+ 
 
 ## Assumptions and options
 
