@@ -128,10 +128,10 @@ ch_img_meta_callback(struct capture_helper_callback_args * args)
 	g_assert_nonnull( img_p );
 
 	ASSERT_PRINTF(
-		imgmeta->len >= VFS_PROPRIETARY_IMG_MIN_HEIGHT * VFS_PROPRIETARY_IMG_MIN_HEIGHT &&
+		imgmeta->len > 2 &&
 		imgmeta->len <= VFS_PROPRIETARY_IMG_MAX_HEIGHT * VFS_PROPRIETARY_IMG_MAX_HEIGHT &&
-		imgmeta->w >= VFS_PROPRIETARY_IMG_MIN_HEIGHT && imgmeta->w <= VFS_PROPRIETARY_IMG_MAX_HEIGHT &&
-		imgmeta->h >= VFS_PROPRIETARY_IMG_MIN_HEIGHT && imgmeta->h <= VFS_PROPRIETARY_IMG_MAX_HEIGHT,
+		imgmeta->w > 0 && imgmeta->w <= VFS_PROPRIETARY_IMG_MAX_HEIGHT &&
+		imgmeta->h > 0 && imgmeta->h <= VFS_PROPRIETARY_IMG_MAX_HEIGHT,
 		-1, "Invalid img returned, w=%zu, h=%zu, len=%zu", imgmeta->w, imgmeta->h, imgmeta->len
 	);
 

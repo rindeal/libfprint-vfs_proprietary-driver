@@ -32,7 +32,7 @@
 // #define VALIDITY_PRODUCT_ID_5131    0x0018  // FLOSS implementation exists
 
 /* Minimum image height */
-#define VFS_PROPRIETARY_IMG_MIN_HEIGHT  200  // not used originally
+// #define VFS_PROPRIETARY_IMG_MIN_HEIGHT  200  // less than 200 returned when run-testing
 
 /* Maximum image height */
 #define VFS_PROPRIETARY_IMG_MAX_HEIGHT  1023  // not used originally
