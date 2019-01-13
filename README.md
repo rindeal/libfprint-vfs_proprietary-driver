@@ -41,6 +41,9 @@ Although there are some reverse-engineering efforts underway for other sensors -
 If you use [Portage](https://wiki.gentoo.org/wiki/Portage) you can just install [`sys-auth/libfprint` package from my ebuild repo](https://github.com/rindeal/rindeal-ebuild-repo/tree/master/sys-auth/libfprint)
 with `vfs_proprietary-driver` USE-flag enabled.
 
+#### For Arch Users
+If you are on arch linux, you can install it from Arch User Repository(AUR) using package name [libfprint-vfs_proprietary-git](https://aur.archlinux.org/packages/libfprint-vfs_proprietary-git/)
+
 ### Manual setup
 How to fit everything together is specific to every Linux distribution, so I cannot describe it step by step, but the final architecture should look like this:
 
