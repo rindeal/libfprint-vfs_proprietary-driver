@@ -55,12 +55,19 @@
 #define ASSERT_GOTO_LABEL cleanup
 
 
+/**
+ * @brief Epoll event handler
+ */
 typedef int
 (*capture_helper_epoll_eevh_t)(
 	struct capture_helper    * ch,
+	/* TODO add `enum efd` argument here */
 	const struct epoll_event * eev
 );
 
+/**
+ * @brief Pipe object type
+ */
 UNION_OF_STRUCT_N_ARRAY(
 	pipe,,
 	,,
@@ -69,6 +76,13 @@ UNION_OF_STRUCT_N_ARRAY(
 	r, w
 );
 
+/**
+ * @brief Index number of file descriptor registered in epoll
+ *
+ * The index is stored in `efds` member of `struct capture_helper`.
+ * The index numbers are used for all data passing between functions handling epoll machinery
+ * and also for epoll events identification and event callback jump table.
+ */
 enum efd
 {
 	EFD_STDERR = 0,
@@ -85,7 +99,7 @@ struct capture_helper
 	int wstatus;
 
 	int epollfd;
-	/* the number of registered file descriptors - the event loop won't end unless this becomes zero again */
+	/* the number of registered file descriptors - the event loop won't end unless this becomes zero again! */
 	size_t epoll_nreg;
 	int efds[_EFD_LAST_];
 	struct
@@ -128,7 +142,7 @@ capture_helper_new(void)
 	for ( size_t i = 0; i < G_N_ELEMENTS(ch->efds); i++)
 		ch->efds[i] = -1;
 
-	ch->stderr = g_string_sized_new(65536);
+	ch->stderr = g_string_sized_new(BUFSIZ);
 
 	return ch;
 }
@@ -234,9 +248,9 @@ capture_helper_spawn(struct capture_helper * ch)
 		interr, -interr, "Failed to initialize posix_spawn"
 	);
 
-	char * empty_str_list[] = { NULL };
+	char * str_list_dummy[] = { NULL };
 	interr = posix_spawn(&pid, VFS_PROPRIETARY_CAPTURE_HELPER_PATH,
-							&spawn_actions, &spawn_attrs, empty_str_list, empty_str_list);
+							&spawn_actions, &spawn_attrs, str_list_dummy, str_list_dummy);
 	ASSERT_PERROR( interr == 0 , -errno, "Failed to spawn capture-helper");
 	fp_dbg("capture-helper spawned successfully, pid=%d", pid);
 	ch->startup = time(NULL);
@@ -249,7 +263,7 @@ capture_helper_spawn(struct capture_helper * ch)
 	};
 	ASSERT_PERROR(
 		write(pipes.w.stdin.w, &api_in, sizeof(api_in)) == sizeof(api_in),
-		-errno, "Failed to pass IPC FD to child"
+		-errno, "Failed to pass IPC FDs to capture-helper"
 	);
 	close(pipes.w.stdin.w);
 
@@ -263,6 +277,7 @@ capture_helper_spawn(struct capture_helper * ch)
 
 	retcode = 0;
 cleanup:
+	/* always close opposing ends of pipes, so that they won't stall */
 	for ( i = 0; i < G_N_ELEMENTS(pipes.r.a); i++ )
 		close(pipes.r.a[i].w);
 	for ( i = 0; i < G_N_ELEMENTS(pipes.w.a); i++ )
@@ -289,7 +304,11 @@ capture_helper_stderr_get (struct capture_helper * ch)
 	return ch->stderr;
 }
 
-/* return 0 when EOF, 1 when EAGAIN, otherwise <0 */
+/**
+ * @brief Non-blockingly read from stderr as much as possible
+ *
+ * @return 0 when EOF, 1 when EAGAIN, otherwise <0
+ */
 int
 capture_helper_stderr_try_read_all (struct capture_helper * const ch)
 {
@@ -324,7 +343,7 @@ capture_helper_stderr_try_read_all (struct capture_helper * const ch)
 		{
 			return ( errno <= 0 || errno > 255 ) ? -255 : -errno;
 		}
-	} while(1);
+	} while( true );
 }
 
 
@@ -355,7 +374,7 @@ capture_helper_epoll_unregister (struct capture_helper * ch, enum efd efd)
 {
 	int interr, retcode = -255;
 
-	ASSERT_PRINTF( ch->epoll_nreg != 0 , -1, "%s: epoll_nreg == 0!", __FUNCTION__);
+	ASSERT_PRINTF( ch->epoll_nreg != 0 , -1, "%s: epoll_nreg == 0!", __func__);
 
 	interr = epoll_ctl(ch->epollfd, EPOLL_CTL_DEL, ch->efds[efd], NULL);
 	ASSERT_PERROR( interr == 0 , -errno, "EPOLL_CTL_DEL");
@@ -415,15 +434,13 @@ capture_helper_callback_call (
 }
 
 
-#define CAPTURE_HELPER_REMAINING_TIME(_ch_p_) ( VFS_PROPRIETARY_CAPTURE_HELPER_TIMEOUT - ( time(NULL) - (_ch_p_)->startup ) )
-
 int
 capture_helper_wait_until_finished(struct capture_helper * const ch)
 {
 	int interr, retcode = -255;
 
 	ch->epollfd = epoll_create1(EPOLL_CLOEXEC);
-	ASSERT_PERROR( ch->epollfd != -1 , -errno, "Failed to create epoll");
+	ASSERT_PERROR( ch->epollfd >= 0 , -errno, "Failed to create epoll");
 
 	interr = capture_helper_epoll_register(ch, EFD_STDERR, EPOLLIN);
 	ASSERT_PRINTF( interr == 0 , -errno, "Failed to register stderr to epoll");
@@ -436,10 +453,11 @@ capture_helper_wait_until_finished(struct capture_helper * const ch)
 	{
 		struct epoll_event eev;
 
-		int timeout = CAPTURE_HELPER_REMAINING_TIME(ch) * 1000;
-		ASSERT_PRINTF( timeout > 0 , -ETIMEDOUT, "Timed out waiting for capture-helper");
+		int elapsed = time(NULL) - ch->startup;
+		int remaining = VFS_PROPRIETARY_CAPTURE_HELPER_TIMEOUT - elapsed;
+		ASSERT_PRINTF( remaining > 0 , -ETIMEDOUT, "Timed out waiting for capture-helper");
 
-		interr = epoll_wait(ch->epollfd, &eev, 1, timeout);
+		interr = epoll_wait(ch->epollfd, &eev, 1, remaining * 1000);
 		ASSERT_PERROR( interr != -1 , -errno, "epoll_wait");
 
 		if ( interr == 0 )
@@ -449,10 +467,11 @@ capture_helper_wait_until_finished(struct capture_helper * const ch)
 		interr = capture_helper_epoll_handle_event(ch, &eev);
 		ASSERT_SILENT( interr == 0 , interr);
 	}
+	fp_dbg("exited epoll loop");
 
 	interr = waitpid(ch->pid, &ch->wstatus, WNOHANG);
 	ASSERT_PERROR( interr != -1 , -errno, "waitpid");
-	ASSERT_PRINTF( interr != 0 , -1, "waitpid: child not dead yet");
+	ASSERT_PRINTF( interr != 0 , -1, "waitpid: capture-helper not dead yet");
 	ch->pid = -1;
 
 	retcode = -WEXITSTATUS(ch->wstatus);
@@ -478,7 +497,8 @@ capture_helper_eevh_stderr (
 		interr = capture_helper_stderr_try_read_all(ch);
 		ASSERT_PERROR( interr >= 0 , interr, "Failed to read capture-helper stderr");
 
-		if ( interr > 0 )
+		/* EAGAIN */
+		if ( interr == 1 )
 			return 0;
 	}
 
@@ -512,16 +532,17 @@ capture_helper_eevh_imgready (
 	struct capture_helper_api_img_ready api_img_ready = { .status = 0 };
 	ASSERT_PERROR(
 		read(ch->efds[EFD_IMG_READY], &api_img_ready, sizeof(api_img_ready)) == sizeof(api_img_ready),
-		-errno, "Failed to ready img ready status"
+		-errno, "Failed to read img ready status"
 	);
-	ASSERT_PRINTF( api_img_ready.status == CAPTURE_HELPER_IMG_READY_OK , -254, "Invalid img ready status read");
+	ASSERT_PRINTF( api_img_ready.status == CAPTURE_HELPER_IMG_READY_OK , -254, "Invalid img ready status read (%d)",
+		api_img_ready.status);
 
 
 	struct capture_helper_callback_args cb_args = {
 		.payload.img_ready = NULL
 	};
 	interr = capture_helper_callback_call(ch, CAPTURE_HELPER_CALLBACK_IMG_READY, &cb_args);
-	ASSERT_PRINTF( interr >= 0 , -254, "imgready cb call failed");
+	ASSERT_PRINTF( interr >= 0 , -254, "imgready cb call failed with code %d", interr);
 
 
 	ASSERT_SILENT( ( retcode = capture_helper_epoll_register(ch, EFD_IMG_META, EPOLLIN) ) == 0 , retcode);
@@ -557,26 +578,26 @@ capture_helper_eevh_imgmeta (
 	struct capture_helper_api_img_metadata api_payload;
 	ASSERT_PERROR(
 		read(ch->efds[EFD_IMG_META], &api_payload, sizeof(api_payload)) == sizeof(api_payload),
-		-errno, "Failed to ready img ready status"
+		-errno, "Failed to read img metadata"
 	);
 
 
-	struct capture_helper_img_metadata imgmeta = {
+	struct capture_helper_img_metadata img_meta_cb_payload = {
 		.w = api_payload.img_w,
 		.h = api_payload.img_h,
 		.len = api_payload.img_len,
 		.data = NULL,
 	};
 	struct capture_helper_callback_args cb_args = {
-		.payload.img_meta = &imgmeta
+		.payload.img_meta = &img_meta_cb_payload
 	};
 	interr = capture_helper_callback_call(ch, CAPTURE_HELPER_CALLBACK_IMG_META, &cb_args);
-	ASSERT_PRINTF( interr >= 0 , -254, "imgmeta cb call failed");
-	ASSERT_PRINTF( imgmeta.data != NULL , -1, "imgmeta cb didn't fill 'data' field");
+	ASSERT_PRINTF( interr >= 0 , -254, "img meta cb call failed with code %d", interr);
+	ASSERT_PRINTF( img_meta_cb_payload.data != NULL , -1, "img meta cb didn't fill out the 'data' field");
 
 
-	ch->img_data.buf = imgmeta.data;
-	ch->img_data.bufsz = imgmeta.len;
+	ch->img_data.buf = img_meta_cb_payload.data;
+	ch->img_data.bufsz = img_meta_cb_payload.len;
 
 
 	ASSERT_SILENT( ( retcode = capture_helper_epoll_register(ch, EFD_IMG_DATA, EPOLLIN) ) == 0 , retcode);
@@ -619,6 +640,7 @@ capture_helper_eevh_imgdata (
 	ch->img_data.used += interr;
 
 
+	/* TODO: could this be handled more properly? */
 	if ( ch->img_data.used < ch->img_data.bufsz )
 		return 0;
 
@@ -627,7 +649,7 @@ capture_helper_eevh_imgdata (
 		.payload.img_data = ch->img_data.buf,
 	};
 	interr = capture_helper_callback_call(ch, CAPTURE_HELPER_CALLBACK_IMG_DATA, &cb_args);
-	ASSERT_PRINTF( ! ( interr < 0 ) , -1, "imgdata cb call failed");
+	ASSERT_PRINTF( ! ( interr < 0 ) , -1, "img data cb call failed with code %d", interr);
 
 
 	/* img data are out of our control as of now, cleanup their traces immediately to prevent accidentical usage */
