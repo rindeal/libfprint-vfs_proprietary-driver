@@ -112,11 +112,11 @@ main(int const argc, char * const argv[])
 	fclose(stdin);
 
 
-	EXECUTE_IN_TIME(1, "timed out waiting for VFS service",
+	EXECUTE_IN_TIME(5, "timed out waiting for VFS service",
 		iretval = vfs_wait_for_service();
 		ASSERT_VFSW_RESULT_OK(iretval, EXIT_FAILURE, "vfs_wait_for_service");
 	);
-	EXECUTE_IN_TIME(2, "timed out waiting for VFS wrapper to initialize",
+	EXECUTE_IN_TIME(5, "timed out waiting for VFS wrapper to initialize",
 		iretval = vfs_set_matcher_type(VFS_FPRINT_MATCHER);
 		ASSERT_VFSW_RESULT_OK(iretval, EXIT_FAILURE, "vfs_set_matcher_type");
 
