@@ -45,5 +45,5 @@ sed -e "s|if imaging_dep.found()|if imaging_dep != [] and imaging_dep.found()|" 
 
 
 ## run the build
-meson -D drivers=vfs_proprietary -D x11-examples=false -D doc=false build
+meson -D drivers=vfs_proprietary -D x11-examples=false -D gtk-examples=false -D doc=false build
 ninja -v -C build
