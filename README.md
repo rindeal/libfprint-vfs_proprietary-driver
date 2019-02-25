@@ -110,13 +110,28 @@ How to fit everything together is specific to every Linux distribution, so I can
 
 ```
 
+up-to-date script to compile _libfprint_ with this driver enabled is [here](https://github.com/rindeal/libfprint-vfs_proprietary-driver/blob/master/.ci/script)
+
+
 **Notes:**
 
- - `vfs_proprietary_capture-helper` is built together with the driver and the driver will have it's installation path hardcoded into itself
- - `vfs_proprietary_capture-helper` will also have rpath set to the directory containing `libvfsFprintWrapper.so`, so that you can place the proprietary binaries into a separate dir in `/opt` without the necessity to register the path in `/etc/ld.so.conf`.
- - proprietary binaries can be downloaded from [here](https://ftp.hp.com/pub/softpaq/sp84501-85000/sp84530.tar)
- - up-to-date script to compile _libfprint_ with this driver enabled is [here](https://github.com/rindeal/libfprint-vfs_proprietary-driver/blob/master/.ci/script)
- 
+### Proprietary binaries
+
+They can be downloaded from [here](https://ftp.hp.com/pub/softpaq/sp84501-85000/sp84530.tar).
+The laptop I developed this driver on is from Hewlett-Packard, so I'm using a driver package from this vendor, but it's possible that you can find these binaries elsewhere, too.
+From all the files in this archive, we're going to use only two of them: `vcsFPService` and `libvfsFprintWrapper.so`.
+
+- `vcsFPService` is a daemon which has to be running for this driver to work at all
+- `libvfsFprintWrapper.so` is a shared library used to handle communication with `vcsFPService` daemon and is the only proprietary component this driver uses directly
+
+
+### `vfs_proprietary_capture-helper`
+
+This small utility is built together with the driver, is installed into `libexec` dir by default and the driver will have it's installation path hardcoded into itself.
+It links dynamically to the proprietary shared library `libvfsFprintWrapper.so`.
+This utility has rpath hardcoded to the directory containing `libvfsFprintWrapper.so`, so you can place the proprietary library even under non-standard directory (eg. `/opt`).
+To customize the path to this dir see [Assumptions and options](#assumptions-and-options) section.
+
 
 ## Assumptions and options
 
