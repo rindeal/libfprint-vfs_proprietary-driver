@@ -411,15 +411,42 @@
 #define UNION_OF_STRUCT_N_ARRAY_PASTE2_(x, y)  UNION_OF_STRUCT_N_ARRAY_PASTE3_(x, y)
 #define UNION_OF_STRUCT_N_ARRAY_PASTE(x, y)    UNION_OF_STRUCT_N_ARRAY_PASTE2_(x, y)
 
-#define UNION_OF_STRUCT_N_FOR_EACH_(N, type, ...)  UNION_OF_STRUCT_N_ARRAY_PASTE(UNION_OF_STRUCT_N_FOR_EACH_, N)(type, __VA_ARGS__)
-#define UNION_OF_STRUCT_N_FOR_EACH(type, ...)      UNION_OF_STRUCT_N_FOR_EACH_(PP_NARG(__VA_ARGS__), type, __VA_ARGS__)
+#define UNION_OF_STRUCT_N_FOR_EACH__(N, type, ...)  UNION_OF_STRUCT_N_ARRAY_PASTE(UNION_OF_STRUCT_N_FOR_EACH_, N)(type, __VA_ARGS__)
+#define UNION_OF_STRUCT_N_FOR_EACH_(type, ...)      UNION_OF_STRUCT_N_FOR_EACH__(PP_NARG(__VA_ARGS__), type, __VA_ARGS__)
 
+
+/**
+ * @brief Creates a static array with named elements
+ *
+ * @code{.c}
+ * typedef UNION_OF_STRUCT_N_ARRAY(
+ * 	,,
+ * 	,,
+ * 	a,
+ * 	int,
+ * 	r, w
+ * ) Pipe;
+ * @endcode
+ *
+ * will produce an object which you can use like this:
+ *
+ * @code{.c}
+ * Pipe p;
+ * pipe(p.a);
+ * write(p.w, buf, strlen(buf));
+ * read(p.r, buf, buflen);
+ * for ( int i = 0; i < (sizeof(p) / sizeof(*p)); i++ )
+ * {
+ * 	close(p.a[i]);
+ * }
+ * @endcode
+ */
 #define UNION_OF_STRUCT_N_ARRAY(uname_, uvarname_, sname_, svarname_, avarname_, type_, ...) \
 	union uname_ \
 	{ \
 		struct __attribute__ ((__packed__)) sname_\
 		{\
-			UNION_OF_STRUCT_N_FOR_EACH(type_, __VA_ARGS__) \
+			UNION_OF_STRUCT_N_FOR_EACH_(type_, __VA_ARGS__) \
 		} svarname_;\
 		type_ avarname_[PP_NARG(__VA_ARGS__)]; \
 	} uvarname_ \
