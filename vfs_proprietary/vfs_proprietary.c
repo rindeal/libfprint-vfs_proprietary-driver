@@ -83,7 +83,7 @@ vfs_proprietary_dev_open(struct fp_img_dev * const imgdev, unsigned long const d
 {
 	int retcode = -255;
 
-	fpi_dev_set_nr_enroll_stages(fpi_imgdev_get_dev(imgdev), VFS_PROPRIETARY_NR_ENROLL);
+	fpi_dev_set_nr_enroll_stages(FP_DEV(imgdev), VFS_PROPRIETARY_NR_ENROLL);
 
 	retcode = 0;
 	fpi_imgdev_open_complete(imgdev, retcode);
@@ -218,7 +218,7 @@ cleanup:
 
 	capture_helper_free(ch);
 
-	if (G_UNLIKELY( retcode < 0 && fpi_dev_get_dev_state(fpi_imgdev_get_dev(imgdev)) != DEV_STATE_ERROR ))
+	if (G_UNLIKELY( retcode < 0 && fpi_dev_get_dev_state(FP_DEV(imgdev)) != DEV_STATE_ERROR ))
 	{
 		fpi_imgdev_session_error(imgdev, retcode);
 	}
