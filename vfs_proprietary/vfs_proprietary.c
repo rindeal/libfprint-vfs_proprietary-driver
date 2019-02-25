@@ -218,10 +218,10 @@ cleanup:
 
 	capture_helper_free(ch);
 
-	if (G_UNLIKELY( retcode < 0 && fpi_dev_get_dev_state(FP_DEV(imgdev)) != DEV_STATE_ERROR ))
-	{
-		fpi_imgdev_session_error(imgdev, retcode);
-	}
+// 	if (G_UNLIKELY( retcode < 0 && fpi_dev_get_dev_state(FP_DEV(imgdev)) != DEV_STATE_ERROR ))
+// 	{
+// 		fpi_imgdev_session_error(imgdev, retcode);
+// 	}
 
 	if ( retcode < 0 )
 		fp_dbg("dev_activate(): %s", strerror(-retcode));
