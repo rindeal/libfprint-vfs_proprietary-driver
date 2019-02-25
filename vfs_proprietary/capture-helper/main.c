@@ -34,6 +34,8 @@
 #include <syslog.h>  /* openlog, syslog */
 #include <errno.h>   /* errno, E* */
 
+#include <sys/stat.h> /* stat */
+
 
 #undef ASSERT_RETCODE_VARIABLE_NAME
 #define ASSERT_RETCODE_VARIABLE_NAME  exit_code
@@ -110,6 +112,17 @@ main(int const argc, char * const argv[])
 	iretval = read(STDIN_FILENO, &ipcin, sizeof(ipcin));
 	ASSERT_PERROR( iretval == sizeof(ipcin) , errno, "Failed to read IPC in");
 	fclose(stdin);
+
+
+	/* simple check for https://github.com/rindeal/libfprint-vfs_proprietary-driver/issues/4 */
+	{
+		struct stat statbuf;
+		iretval = stat("/tmp/vcsSemKey_ServiceReady", &statbuf);
+		if ( iretval != 0 )
+		{
+			fprintf(stderr, "'/tmp/vcsSemKey_ServiceReady': %s. Make sure the `vcsFPService` daemon is running under the same `/tmp` namespace as this process.\n", strerror(errno));
+		}
+	}
 
 
 	EXECUTE_IN_TIME(5, "timed out waiting for VFS service",
