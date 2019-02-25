@@ -285,10 +285,12 @@
 	)
 
 
-#if ! defined( NDEBUG )
-#  define TRACE()  fprintf(stderr, "TRACE %s: %s() [%d]\n", _TRACE_STRIPPATH_(__FILE__), __func__, __LINE__)
+#if defined( VFS_PROPRIETARY_TRACE )
+   // this second macro is needed for TRACE()'s zero argument support
+#  define TRACE_(format_, ...) fprintf(stderr, "TRACE %s: %s() [%d] " format_ "%s\n", _TRACE_STRIPPATH_(__FILE__), __func__, __LINE__, __VA_ARGS__)
+#  define TRACE(...)  TRACE_(__VA_ARGS__, "")
 #else
-#  define TRACE()  ((void) 0)
+#  define TRACE(...)  ((void) 0)
 #endif
 
 
