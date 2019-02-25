@@ -27,7 +27,7 @@
 #include <string.h>  /* strlen */
 #include <stdbool.h>
 #include <stdarg.h>  /* va_list, va_start, vfprintf, va_end */
-#include <time.h>  /* time */
+#include <time.h>    /* time */
 
 #include <signal.h>  /* signal */
 #include <unistd.h>  /* alarm, write, close */
@@ -96,7 +96,7 @@ main(int const argc, char * const argv[])
 {
 	int exit_code = EXIT_FAILURE;
 	int iretval;
-	time_t startup = time(NULL);
+	const time_t startup = time(NULL);
 
 	struct capture_helper_api_input  ipcin  = { 0 };
 	struct capture_helper_api_img_metadata imgmeta = { 0 };
@@ -140,9 +140,9 @@ main(int const argc, char * const argv[])
 		 *
 		 * The lockup can be triggered by `kill -9`ing application waiting on vfs_capture().
 		 *
-		 * It takes about 0.4s to execute.
+		 * Usually it takes about 0.4s to execute.
 		 *
-		 * This function also prints messages like:
+		 * This function also prints to stdout messages like this:
 		 *
 		 *     Sensor usb#vid_138a#pid_003f#... plugged.
 		 *
