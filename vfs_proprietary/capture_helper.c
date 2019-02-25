@@ -534,8 +534,8 @@ capture_helper_eevh_imgready (
 		read(ch->efds[EFD_IMG_READY], &api_img_ready, sizeof(api_img_ready)) == sizeof(api_img_ready),
 		-errno, "Failed to read img ready status"
 	);
-	ASSERT_PRINTF( api_img_ready.status == CAPTURE_HELPER_IMG_READY_OK , -254, "Invalid img ready status read (%d)",
-		api_img_ready.status);
+	ASSERT_PRINTF( api_img_ready.status == CAPTURE_HELPER_IMG_READY_OK , -254,
+					"Invalid img ready status read (%lu)", api_img_ready.status);
 
 
 	struct capture_helper_callback_args cb_args = {
