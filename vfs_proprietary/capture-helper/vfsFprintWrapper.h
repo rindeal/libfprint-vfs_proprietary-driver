@@ -26,9 +26,14 @@
 #define __vfsWrapper_h__
 
 
+/**
+ * @brief OK-status value for VFS Wrapper functions returing integer as a status indicator
+ */
 #define VFSW_RESULT_OK  0
 
-
+/**
+ * @brief Argument to `vfs_set_matcher_type()`
+ */
 enum vfs_matcher_type
 {
 	VFS_NT_MATCHER = 1,
@@ -36,13 +41,20 @@ enum vfs_matcher_type
 	VFS_FPRINT_MATCHER = 3,
 };
 
+/**
+ * @brief VFS Wrapper capture result
+ *
+ * Return value of `vfs_capture()`.
+ */
 enum vfsw_capture_result
 {
 	VFSW_CAPTURE_ERROR = -1,
-	VFSW_CAPTURE_COMPLETE = 1,
-	VFSW_CAPTURE_FAIL
+	VFSW_CAPTURE_COMPLETE = 1
 };
 
+/**
+ * @brief Opaque object used in communication with VFS Wrapper
+ */
 struct vfsw_data {
 	void * pValidityCtx;
 	void * hImage;
