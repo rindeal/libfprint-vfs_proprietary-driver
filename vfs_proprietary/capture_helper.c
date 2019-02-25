@@ -68,13 +68,13 @@ typedef int
 /**
  * @brief Pipe object type
  */
-UNION_OF_STRUCT_N_ARRAY(
-	pipe,,
+typedef UNION_OF_STRUCT_N_ARRAY(
+	,,
 	,,
 	a,
 	int,
 	r, w
-);
+) Pipe;
 
 /**
  * @brief Index number of file descriptor registered in epoll
@@ -184,7 +184,7 @@ capture_helper_spawn(struct capture_helper * ch)
 				, r,
 				,,
 				a,
-				union pipe,
+				Pipe,
 				stderr, img_ready, img_meta, img_data
 			);
 			/**
@@ -194,15 +194,15 @@ capture_helper_spawn(struct capture_helper * ch)
 				, w,
 				,,
 				a,
-				union pipe,
+				Pipe,
 				stdin
 			);
 		};
-		union pipe a[0];
+		Pipe a[0];
 	} pipes;
-	const size_t npipes = sizeof(pipes) / sizeof(union pipe);
+	const size_t npipes = sizeof(pipes) / sizeof(Pipe);
 	for ( i = 0; i < npipes; i++ )
-		pipes.a[i] = (union pipe){ .r = -1, .w = -1 };
+		pipes.a[i] = (Pipe){ .r = -1, .w = -1 };
 
 	pid_t pid = -1;
 	posix_spawn_file_actions_t spawn_actions
