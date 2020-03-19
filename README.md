@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.com/rindeal/libfprint-vfs_proprietary-driver.svg?branch=master)](https://travis-ci.com/rindeal/libfprint-vfs_proprietary-driver)
 ![Stability - Beta](https://img.shields.io/badge/stability-beta-33bbff.svg)
 
+[**See project status announcement**](https://github.com/rindeal/libfprint-vfs_proprietary-driver/issues/8)
 
 ## What
 
